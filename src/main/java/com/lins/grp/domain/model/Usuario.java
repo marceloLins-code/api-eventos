@@ -32,7 +32,7 @@ public class Usuario implements Serializable {
 	private String nome;	
 	
 	
-	private Boolean ativo = false;
+	private Boolean ativo;
 		
 	@JsonIgnore
 	@Transient

@@ -45,9 +45,19 @@ public class Evento implements Serializable {
 	}
 	
 	public boolean isContemVaga() {
-		return this.vaga >=1; 
+		if (vaga <1) {
+			throw new RuntimeException("vagas esgotadas!");
+		}
+		this.vaga = vaga -1;
+		return true; 
 		
 	}
+	public void eventoIniciado() {
+		if (getDataCompra().getTime() > getDataEvento().getTime()) {
+			throw new RuntimeException("evento ja iniciado!");
+		}
+	}
+	
 	
 	
 

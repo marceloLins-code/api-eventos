@@ -31,7 +31,6 @@ public class EventoController {
 
 	private EventoService eventoService;
 
-	private UsuarioRepository usuarioRepository;
 
 	@GetMapping
 	public List<Evento> listarEventos() {
@@ -52,12 +51,7 @@ public class EventoController {
 		return ResponseEntity.ok().body(criar);
 	}
 
-	@DeleteMapping("/{cpf}")
-	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public ResponseEntity<Void> usuarioExcluir(@PathVariable Long cpf) {
-		eventoService.remover(cpf);
-		return ResponseEntity.noContent().build();
-	}
+	
 
 	@PutMapping("/entrada")
 	@ResponseStatus(HttpStatus.CREATED)
@@ -76,14 +70,13 @@ public class EventoController {
 		return eventoRepository.streamByNomeContainingAndUsuarioCpf(nome, cpf);
 	}
 	
+	@DeleteMapping("/{cpf}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public ResponseEntity<Void> usuarioExcluir(@PathVariable Long cpf) {
+		eventoService.cancelarEvento(cpf);
+		return ResponseEntity.noContent().build();
+	}
 	
 	
-	/*
-	 * @GetMapping("/cpf/nome")
-	 *  public List<Evento> list(Long cpf) {
-	 * 
-	 * 
-	 * }
-	 */
 
 }

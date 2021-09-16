@@ -26,50 +26,39 @@ public class EventoService {
 	// cadastrar usuario
 	public Evento usuarioSalvo(Evento cadastrarUsr) {
 		Long usuarioId = cadastrarUsr.getUsuario().getCpf();
-		Usuario usuarioAtual = usuarioRepository.findById(usuarioId).orElseThrow(() -> new RuntimeException("Não encontrado"));
+		Usuario usuarioAtual = usuarioRepository.findById(usuarioId)
+				.orElseThrow(() -> new RuntimeException("Não encontrado"));
 
-		usuarioAtual.setAtivo(true);
+		cadastrarUsr.eventoIniciado();
 		cadastrarUsr.isContemVaga();
+		usuarioAtual.setAtivo(true);
 		return eventoRepository.save(cadastrarUsr);
 	}
-
-	
 
 	public void entrada(Evento evento) {
 		Usuario usuarioValido = usuarioRepository.getById(evento.getId());
 
 		if (usuarioValido == null || usuarioValido.isInativo() || !evento.isContemVaga()) {
-			processarData(evento);
+
 			throw new RuntimeException("usuario invalido");
 		}
-		evento.setUsuario(evento.getUsuario());
+
 		eventoRepository.save(evento);
 	}
-	
 
-		public void remover(Long cpf) {
-		eventoRepository.deleteById(cpf);
-		
-	}
-		
-	
-	public void processarData(Evento periodo){
-		Long t1 = periodo.getDataCompra().getTime();
-		Long t2 = periodo.getDataEvento().getTime();
-		
-		if (t1 > t2) {
-			throw new RuntimeException("horário excedido!");
+	public void cancelarEvento(Long cpf) {
+		Usuario idUsuario = usuarioRepository.getById(cpf);
+		if (!idUsuario.isInativo()) {
+			throw new RuntimeException("usuario ativo");
 		}
-		
+		eventoRepository.deleteById(idUsuario.getCpf());
 	}
 
 	/*
 	 * // Listar as inscrições de um usuário; public Optional<Evento> listEvUs(Long
 	 * uss) {
 	 * 
-	 * Usuario usr = usuarioRepository.getById(uss); return usuarioRepository.find
-	 * 
-	 * }
+	 * Usuario usr = usuarioRepository.getById(uss); return usuarioRepository.find }
 	 */
 
 }

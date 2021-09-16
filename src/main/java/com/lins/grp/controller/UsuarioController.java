@@ -39,7 +39,7 @@ public class UsuarioController {
 	}
 	
 	
-	//extra
+	
 	@DeleteMapping("/{cpf}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public ResponseEntity<Void> usrDelete(@PathVariable Long cpf) {
