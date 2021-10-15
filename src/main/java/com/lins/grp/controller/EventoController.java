@@ -2,10 +2,8 @@ package com.lins.grp.controller;
 
 import java.util.List;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,9 +14,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lins.grp.domain.model.Evento;
+import com.lins.grp.domain.model.Usuario;
 import com.lins.grp.domain.repository.EventoRepository;
-import com.lins.grp.domain.repository.UsuarioRepository;
 import com.lins.grp.domain.service.EventoService;
+import com.lins.grp.domain.service.UsuarioService;
 
 import lombok.AllArgsConstructor;
 
@@ -30,53 +29,70 @@ public class EventoController {
 	private EventoRepository eventoRepository;
 
 	private EventoService eventoService;
-
-
-	@GetMapping
-	public List<Evento> listarEventos() {
-		return eventoRepository.findAll();
-	}
+	
+	
+	
+	
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<Evento> addEvt(@RequestBody Evento evento) {
-		eventoService.eventoCriado(evento);
+	public ResponseEntity<Evento> eventoCriar(@RequestBody Evento evento) {
+		eventoService.criarEvento(evento);
+		
 		return ResponseEntity.ok().body(evento);
 	}
 
-	@PostMapping("/{criar}")
+	@PostMapping("/inscrever/{cpf}/{id}")
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<Evento> adicionarUsuario(@RequestBody Evento criar) {
-		eventoService.usuarioSalvo(criar);
-		return ResponseEntity.ok().body(criar);
+	public ResponseEntity<Evento> increverUsuario(@PathVariable Long cpf, @PathVariable Long id) {
+		Evento usuarioValido = eventoService.inscreverUsuario(cpf, id);
+
+		return ResponseEntity.ok(usuarioValido);
 	}
 
-	
+	@PostMapping("/acessar/{id}/{cpf}")
+	public ResponseEntity<Evento> acessarEvento(@PathVariable Long id, @PathVariable Long cpf) {
+		Evento usuarioEmAcesso = eventoService.acessoEvento(id, cpf);
+		return ResponseEntity.ok(usuarioEmAcesso);
+	}
 
-	@PutMapping("/entrada")
-	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<Evento> acessarEvento(@RequestBody Evento eventoNovo) {
-		eventoService.entrada(eventoNovo);	
-		
-		// BeanUtils.copyProperties("", "", "id");
-		return ResponseEntity.ok(eventoNovo);
-		
-
+	@GetMapping()
+	public List<Evento> listarEventos() {
+		return eventoRepository.findAll();
 	}
 	
-	@GetMapping("/cpf")
-	public List<Evento> listarIns( String nome, Long cpf) {
+	
+	@GetMapping("/{cpf}")
+	public List<Evento> listarEventos(Long cpf) {
 		
-		return eventoRepository.streamByNomeContainingAndUsuarioCpf(nome, cpf);
+		return eventoService.listarEventos( cpf);
 	}
 	
-	@DeleteMapping("/{cpf}")
+	
+
+	@GetMapping("buscar/por-cpf")
+	public List<Evento> buscarPorNome(String nome, Long cpfUsuario) {
+		
+		return eventoRepository.buscarPorNome(nome, cpfUsuario);		
+		
+	}
+	
+	
+	
+	@GetMapping("listUsuario/{cpf}")
+	public ResponseEntity<Usuario> listaDeUsuarios(Long cpf) {
+		Usuario usuarioEmAcesso = eventoService.listarUsuarios(cpf);
+		return ResponseEntity.ok().body(usuarioEmAcesso);
+		
+	}
+
+	@PutMapping("/{id}/ativo")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public ResponseEntity<Void> usuarioExcluir(@PathVariable Long cpf) {
-		eventoService.cancelarEvento(cpf);
-		return ResponseEntity.noContent().build();
+	public void usuarioSalvo(@PathVariable Long id, @RequestBody Boolean ativo) {
+
+		eventoService.atualizarPessoa(id, ativo);
 	}
-	
-	
+
+
 
 }

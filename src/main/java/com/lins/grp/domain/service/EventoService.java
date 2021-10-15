@@ -1,7 +1,13 @@
 package com.lins.grp.domain.service;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import com.lins.grp.domain.exceptions.EntidadeEmUsoException;
 import com.lins.grp.domain.model.Evento;
 import com.lins.grp.domain.model.Usuario;
 import com.lins.grp.domain.repository.EventoRepository;
@@ -13,52 +19,93 @@ import lombok.AllArgsConstructor;
 @Service
 public class EventoService {
 
-	private EventoRepository eventoRepository;
+	public EventoRepository eventoRepository;
 
-	private UsuarioRepository usuarioRepository;
+	public UsuarioRepository usuarioRepository;
 
-	// criar evento
-	public Evento eventoCriado(Evento evento) {
+	public Evento criarEvento(Evento evento) {
 		return eventoRepository.save(evento);
 
 	}
 
-	// cadastrar usuario
-	public Evento usuarioSalvo(Evento cadastrarUsr) {
-		Long usuarioId = cadastrarUsr.getUsuario().getCpf();
+	public Evento inscreverUsuario(Long cpfUsuario, Long eventoId) {
+		Evento eventoAtual = eventoRepository.findById(eventoId)
+				.orElseThrow(() -> new RuntimeException(" Id Não encontrado"));
+
+		Usuario usuarioAtual = usuarioRepository.findById(cpfUsuario)
+				.orElseThrow(() -> new RuntimeException(" Id Usuario não encontrado"));
+
+		eventoAtual.setUsuario(usuarioAtual);
+		// usuarioAtual.setAtivo(true);
+		eventoAtual.isContemVaga();
+		return eventoRepository.save(eventoAtual);
+
+	}
+
+	public Evento cancelarInscricao(Long cpfUsuario, Long eventoId) {
+
+		Evento eventoAtual = eventoRepository.findById(eventoId)
+				.orElseThrow(() -> new RuntimeException(" Id Não encontrado"));
+
+		Usuario usuarioAtual = usuarioRepository.findById(cpfUsuario)
+				.orElseThrow(() -> new RuntimeException(" Id Usuario não encontrado"));
+
+		eventoAtual.setUsuario(null);
+		usuarioAtual.setAtivo(false);
+		eventoAtual.setVaga(+1);
+		return eventoRepository.save(eventoAtual);
+
+	}
+
+	public Evento acessoEvento(Long eventoId, Long cpfUsuario) {
+		Evento eventoAtual = eventoRepository.findById(eventoId)
+				.orElseThrow(() -> new RuntimeException(" Id Não encontrado"));
+
+		Usuario usuarioAtual = usuarioRepository.findById(cpfUsuario)
+				.orElseThrow(() -> new RuntimeException(" Id Usuario não encontrado"));
+
+		if (eventoAtual.getUsuario().getCpf().equals(usuarioAtual.getCpf())) {
+			usuarioAtual.setAtivo(true);
+
+		}
+		return eventoRepository.save(eventoAtual);
+	}
+
+	public List<Evento> listarEventos(Long cpf) {
+
+		return eventoRepository.streamByUsuarioCpf(cpf);
+	}
+	
+	//listar usuarios
+	public Usuario listarUsuarios(Long id) {
+		
+		Optional<Usuario> usuariosList = usuarioRepository.findById(id);
+		 
+		usuariosList.get().getEventoList().forEach(e -> e.getUsuario());
+		 return usuariosList.get();
+	}
+
+
+	public void excluirUsuario(Evento evento) {
+		Long usuarioId = evento.getUsuario().getCpf();
 		Usuario usuarioAtual = usuarioRepository.findById(usuarioId)
 				.orElseThrow(() -> new RuntimeException("Não encontrado"));
+		try {
+			usuarioAtual.setAtivo(false);
 
-		cadastrarUsr.eventoIniciado();
-		cadastrarUsr.isContemVaga();
-		usuarioAtual.setAtivo(true);
-		return eventoRepository.save(cadastrarUsr);
-	}
-
-	public void entrada(Evento evento) {
-		Usuario usuarioValido = usuarioRepository.getById(evento.getId());
-
-		if (usuarioValido == null || usuarioValido.isInativo() || !evento.isContemVaga()) {
-
-			throw new RuntimeException("usuario invalido");
+		} catch (DataIntegrityViolationException e) {
+			throw new EntidadeEmUsoException(String.format("Usuario de cpf %d em uso", usuarioAtual));
 		}
 
-		eventoRepository.save(evento);
 	}
 
-	public void cancelarEvento(Long cpf) {
-		Usuario idUsuario = usuarioRepository.getById(cpf);
-		if (!idUsuario.isInativo()) {
-			throw new RuntimeException("usuario ativo");
-		}
-		eventoRepository.deleteById(idUsuario.getCpf());
-	}
+	public void atualizarPessoa(Long id, Boolean ativo) {
+		Evento eventoAtual = eventoRepository.findById(id).orElseThrow(() -> new RuntimeException("Não encontrado"));
 
-	/*
-	 * // Listar as inscrições de um usuário; public Optional<Evento> listEvUs(Long
-	 * uss) {
-	 * 
-	 * Usuario usr = usuarioRepository.getById(uss); return usuarioRepository.find }
-	 */
+		eventoAtual.isContemVaga();
+		eventoAtual.getUsuario().setAtivo(ativo);
+		eventoRepository.save(eventoAtual);
+
+	}
 
 }
